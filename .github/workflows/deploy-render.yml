@@ -1,6 +1,9 @@
 name: Build and deploy to Render
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -30,6 +33,7 @@ jobs:
         run: npm run build
 
       - name: Trigger Render deploy
+        if: github.event_name != 'pull_request'
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK"
