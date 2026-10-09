@@ -41,7 +41,7 @@ jobs:
         run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
 
   deploy-qa:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment: qa
@@ -53,6 +53,7 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DEPLOY_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: bash .github/scripts/deploy-render.sh
 
   deploy-stg:
@@ -68,6 +69,7 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DEPLOY_COMMIT_SHA: ${{ github.sha }}
         run: bash .github/scripts/deploy-render.sh
 
   deploy-prod:
@@ -86,4 +88,5 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DEPLOY_COMMIT_SHA: ${{ github.sha }}
         run: bash .github/scripts/deploy-render.sh

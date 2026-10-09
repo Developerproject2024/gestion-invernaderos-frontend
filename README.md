@@ -38,11 +38,11 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Despliegues a Render
 
-El workflow de GitHub Actions compila los pull requests hacia `main`. Cada push exitoso a `main` despliega ese commit a QA. Para promover una versión, publica un GitHub Release con una etiqueta que empiece por `v` (por ejemplo, `v1.2.3`) y basada en un commit de `main` que ya haya pasado por QA. El despliegue a STG espera aprobación; al quedar live, un release estable espera una segunda aprobación antes de promover el mismo commit a PROD. Los pre-releases se despliegan solo a STG.
+El workflow de GitHub Actions compila los pull requests hacia `main` y despliega a QA el commit del PR después de la aprobación requerida por el environment `qa`. Para que no se pueda hacer merge antes de esa aprobación, configura una regla de protección de `main` que requiera el check `deploy-qa` además del check `build`. El merge a `main` ejecuta la compilación, pero no vuelve a desplegar QA. Para promover una versión, publica un GitHub Release con una etiqueta que empiece por `v` (por ejemplo, `v1.2.3`) y basada en un commit de `main` que ya haya pasado por QA. El despliegue a STG espera aprobación; al quedar live, un release estable espera una segunda aprobación antes de promover el mismo commit a PROD. Los pre-releases se despliegan solo a STG.
 
 Esta configuración usa un solo servicio de Render, por lo que QA, STG y PROD son etapas secuenciales sobre la misma URL; cada despliegue reemplaza el anterior. En Render, desactiva Auto-Deploy para que los cambios se publiquen únicamente después del flujo de Actions.
 
-En GitHub, crea los environments `qa`, `stg` y `prod` en **Settings → Environments**. Configura required reviewers para `stg` y `prod`; deja `qa` sin aprobación. Agrega en los tres environments estos Actions secrets:
+En GitHub, crea los environments `qa`, `stg` y `prod` en **Settings → Environments**. Configura required reviewers para los tres environments; QA necesita aprobación antes de desplegar el PR. Agrega en los tres environments estos Actions secrets:
 
 - `RENDER_API_KEY`: una API key de Render con acceso al servicio.
 - `RENDER_SERVICE_ID`: el ID del servicio de Render que se usará en las tres etapas.
