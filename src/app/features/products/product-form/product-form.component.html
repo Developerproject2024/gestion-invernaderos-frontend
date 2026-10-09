@@ -1,0 +1,137 @@
+<form
+  [formGroup]="productForm"
+  (ngSubmit)="onSubmit()"
+  class="space-y-5"
+>
+
+  <!-- Nombre -->
+  <div>
+    <label
+      for="product-name"
+      class="mb-1.5 block text-sm font-semibold text-gray-700"
+    >
+      Nombre del producto
+    </label>
+
+    <input
+      id="product-name"
+      type="text"
+      formControlName="name"
+      placeholder="Ej. Fertilizante NPK"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      productForm.controls.name.invalid &&
+      productForm.controls.name.touched
+    ) {
+      <p class="mt-1.5 text-xs text-red-600">
+        El nombre es obligatorio y debe tener mínimo 3 caracteres.
+      </p>
+    }
+  </div>
+
+  <!-- Cantidad -->
+  <div>
+    <label
+      for="product-quantity"
+      class="mb-1.5 block text-sm font-semibold text-gray-700"
+    >
+      Cantidad
+    </label>
+
+    <input
+      id="product-quantity"
+      type="number"
+      min="0"
+      formControlName="quantity"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      productForm.controls.quantity.invalid &&
+      productForm.controls.quantity.touched
+    ) {
+      <p class="mt-1.5 text-xs text-red-600">
+        La cantidad debe ser igual o mayor a 0.
+      </p>
+    }
+  </div>
+
+  <!-- Valor -->
+  <div>
+    <label
+      for="product-value"
+      class="mb-1.5 block text-sm font-semibold text-gray-700"
+    >
+      Valor
+    </label>
+
+    <input
+      id="product-value"
+      type="number"
+      min="1"
+      formControlName="value"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      productForm.controls.value.invalid &&
+      productForm.controls.value.touched
+    ) {
+      <p class="mt-1.5 text-xs text-red-600">
+        El valor debe ser mayor que 0.
+      </p>
+    }
+  </div>
+
+  <!-- Estado -->
+  <div>
+    <label
+      for="product-status"
+      class="mb-1.5 block text-sm font-semibold text-gray-700"
+    >
+      Estado
+    </label>
+
+    <select
+      id="product-status"
+      formControlName="status"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="ACTIVE">
+        Activo
+      </option>
+
+      <option value="INACTIVE">
+        Inactivo
+      </option>
+    </select>
+  </div>
+
+  <!-- Acciones -->
+  <div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="submit"
+      [disabled]="isSaving()"
+      class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      @if (isSaving()) {
+        Guardando...
+      } @else {
+        {{ isEditMode ? 'Actualizar producto' : 'Guardar producto' }}
+      }
+    </button>
+
+  </div>
+
+</form>

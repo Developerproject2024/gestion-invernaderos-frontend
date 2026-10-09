@@ -1,0 +1,58 @@
+<div class="flex h-screen overflow-hidden bg-[#F4F7F1]">
+
+  <!-- Overlay móvil -->
+  @if (sidebarOpen()) {
+    <button
+      type="button"
+      aria-label="Cerrar menú"
+      class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-50 h-full w-64 transform transition-transform duration-200 lg:static lg:z-auto lg:block lg:translate-x-0"
+    [class.translate-x-0]="sidebarOpen()"
+    [class.-translate-x-full]="!sidebarOpen()"
+  >
+    <app-sidebar />
+  </aside>
+
+
+  <!-- Contenido principal -->
+  <div class="flex min-w-0 flex-1 flex-col">
+
+    <!-- Topbar -->
+    <div class="flex items-center">
+
+      <!-- Botón menú móvil -->
+      <button
+        type="button"
+        aria-label="Abrir menú"
+        class="flex h-16 w-14 shrink-0 items-center justify-center border-b border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 hover:text-gray-900 lg:hidden"
+        (click)="toggleSidebar()"
+      >
+        <span class="text-2xl">☰</span>
+      </button>
+
+      <div class="min-w-0 flex-1">
+        <app-topbar />
+      </div>
+
+    </div>
+
+
+    <!-- Contenido -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6">
+
+      <div class="mx-auto w-full max-w-7xl">
+        <router-outlet />
+      </div>
+
+    </main>
+
+  </div>
+
+</div>

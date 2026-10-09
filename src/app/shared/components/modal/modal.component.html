@@ -1,0 +1,40 @@
+@if (open()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (click)="onBackdropClick($event)"
+  >
+    <div
+      class="w-full rounded-xl bg-white shadow-2xl"
+      [class.max-w-sm]="size() === 'sm'"
+      [class.max-w-lg]="size() === 'md'"
+      [class.max-w-2xl]="size() === 'lg'"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Encabezado -->
+      <div
+        class="flex items-center justify-between border-b border-gray-200 px-6 py-4"
+      >
+        <h2 class="text-lg font-bold text-gray-800">
+          {{ title() }}
+        </h2>
+
+        <button
+          type="button"
+          (click)="onClose()"
+          class="flex h-9 w-9 items-center justify-center rounded-lg text-2xl leading-none text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- Contenido -->
+      <div class="max-h-[80vh] overflow-y-auto p-6">
+        <ng-content />
+      </div>
+    </div>
+  </div>
+}

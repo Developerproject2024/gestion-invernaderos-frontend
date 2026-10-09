@@ -1,0 +1,217 @@
+<form
+  [formGroup]="expenseForm"
+  (ngSubmit)="onSubmit()"
+>
+  <!-- Fecha -->
+  <div>
+    <label
+      for="date"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Fecha
+    </label>
+
+    <input
+      id="date"
+      type="date"
+      formControlName="date"
+      class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      expenseForm.controls.date.invalid &&
+      expenseForm.controls.date.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        La fecha es obligatoria.
+      </p>
+    }
+  </div>
+
+  <!-- Invernadero -->
+  <div class="mt-5">
+    <label
+      for="greenhouseId"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Invernadero
+    </label>
+
+    <select
+      id="greenhouseId"
+      formControlName="greenhouseId"
+      (change)="onGreenhouseChange()"
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="">
+        Selecciona un invernadero
+      </option>
+
+      @for (greenhouse of greenhouses(); track greenhouse.id) {
+        <option [value]="greenhouse.id">
+          {{ greenhouse.name }}
+        </option>
+      }
+    </select>
+
+    @if (
+      expenseForm.controls.greenhouseId.invalid &&
+      expenseForm.controls.greenhouseId.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        Selecciona un invernadero.
+      </p>
+    }
+  </div>
+
+  <!-- Ciclo de producción -->
+  <div class="mt-5">
+    <label
+      for="productionCycleId"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Ciclo de producción
+    </label>
+
+    <select
+      id="productionCycleId"
+      formControlName="productionCycleId"
+      [disabled]="availableCycles().length === 0"
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-gray-100"
+    >
+      <option value="">
+        {{ availableCycles().length ? 'Selecciona un ciclo' : 'No hay ciclos para este invernadero' }}
+      </option>
+
+      @for (cycle of availableCycles(); track cycle.id) {
+        <option [value]="cycle.id">
+          {{ cycle.name }} ({{ cycle.startDate }} — {{ cycle.endDate }})
+        </option>
+      }
+    </select>
+
+    @if (
+      expenseForm.controls.productionCycleId.invalid &&
+      expenseForm.controls.productionCycleId.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        Selecciona el ciclo de producción.
+      </p>
+    }
+  </div>
+
+  <!-- Categoría -->
+  <div class="mt-5">
+    <label
+      for="expenseCategoryId"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Categoría
+    </label>
+
+    <select
+      id="expenseCategoryId"
+      formControlName="expenseCategoryId"
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="">
+        Selecciona una categoría
+      </option>
+
+      @for (category of categories(); track category.id) {
+        <option [value]="category.id">
+          {{ category.name }}
+        </option>
+      }
+    </select>
+
+    @if (
+      expenseForm.controls.expenseCategoryId.invalid &&
+      expenseForm.controls.expenseCategoryId.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        Selecciona una categoría.
+      </p>
+    }
+  </div>
+
+  <!-- Cantidad -->
+  <div class="mt-5">
+    <label
+      for="quantity"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Cantidad
+    </label>
+
+    <input
+      id="quantity"
+      type="number"
+      min="1"
+      formControlName="quantity"
+      class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      expenseForm.controls.quantity.invalid &&
+      expenseForm.controls.quantity.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        La cantidad debe ser mayor que cero.
+      </p>
+    }
+  </div>
+
+  <!-- Valor -->
+  <div class="mt-5">
+    <label
+      for="value"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Valor
+    </label>
+
+    <input
+      id="value"
+      type="number"
+      min="1"
+      formControlName="value"
+      placeholder="Ej. 150000"
+      class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (
+      expenseForm.controls.value.invalid &&
+      expenseForm.controls.value.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        El valor debe ser mayor que cero.
+      </p>
+    }
+  </div>
+
+  <!-- Acciones -->
+  <div
+    class="mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end"
+  >
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="submit"
+      [disabled]="expenseForm.invalid || isSaving()"
+      class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      @if (isSaving()) {
+        Guardando...
+      } @else {
+        {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+      }
+    </button>
+  </div>
+</form>

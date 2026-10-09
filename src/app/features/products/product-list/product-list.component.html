@@ -1,0 +1,287 @@
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Productos</h2>
+      <p class="mt-1 text-sm text-gray-500">
+        Administración de productos e inventario.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <button
+        type="button"
+        (click)="onMovements()"
+        class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+      >
+        Ver producción
+      </button>
+
+      <button
+        type="button"
+        (click)="onCreate()"
+        class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+      >
+        + Nuevo producto
+      </button>
+    </div>
+  </div>
+
+  <app-modal
+    [open]="showForm()"
+    [title]="selectedProduct() ? 'Editar producto' : 'Nuevo producto'"
+    size="md"
+    (closed)="onFormCancel()"
+  >
+    <app-product-form
+      [product]="selectedProduct()"
+      (saved)="onFormSaved()"
+      (cancelled)="onFormCancel()"
+    />
+  </app-modal>
+
+  <app-modal
+    [open]="showDeleteModal()"
+    title="Eliminar producto"
+    size="sm"
+    (closed)="onCancelDelete()"
+  >
+    <div class="space-y-5">
+      <div>
+        <div
+          class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-xl"
+        >
+          ⚠️
+        </div>
+
+        <h3 class="mt-4 text-lg font-semibold text-gray-900">
+          ¿Eliminar este producto?
+        </h3>
+
+        <p class="mt-2 text-sm leading-6 text-gray-500">
+          Esta acción eliminará el producto y no se podrá deshacer.
+        </p>
+      </div>
+
+      @if (productToDelete(); as product) {
+        <div class="rounded-lg bg-gray-50 p-4 text-sm">
+          <div class="flex justify-between gap-4">
+            <span class="text-gray-500">
+              Producto
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ product.name }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex justify-between gap-4">
+            <span class="text-gray-500">
+              Kilos disponibles
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ product.quantity }} kg
+            </span>
+          </div>
+
+          <div class="mt-2 flex justify-between gap-4">
+            <span class="text-gray-500">
+              Valor por kilo
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ formatValue(product.value) }}
+            </span>
+          </div>
+        </div>
+      }
+
+      <div
+        class="flex flex-col-reverse gap-2 border-t border-gray-200 pt-4 sm:flex-row sm:justify-end"
+      >
+        <button
+          type="button"
+          (click)="onCancelDelete()"
+          class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          (click)="onConfirmDelete()"
+          class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
+  <app-table
+    title="Productos registrados"
+    description="Listado de productos disponibles en el inventario."
+    [totalItems]="filteredProducts().length"
+    [currentPage]="currentPage()"
+    [totalPages]="totalPages()"
+    [hasData]="products().length > 0"
+    emptyMessage="No hay productos registrados."
+    (previousPage)="onPreviousPage()"
+    (nextPage)="onNextPage()"
+  >
+    <div class="grid grid-cols-1 gap-3 border-b border-gray-100 p-4 sm:grid-cols-2">
+      <input
+        aria-label="Buscar producto por nombre"
+        type="search"
+        placeholder="Buscar producto..."
+        [ngModel]="searchFilter()"
+        (ngModelChange)="searchFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      />
+
+      <select
+        aria-label="Filtrar productos por estado"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los estados</option>
+        <option value="ACTIVE">Activo</option>
+        <option value="INACTIVE">Inactivo</option>
+      </select>
+
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="justify-self-start rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:col-span-2"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Producto
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Kilos disponibles
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Valor por kilo
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Estado
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Acciones
+          </th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 bg-white">
+        @if (filteredProducts().length === 0) {
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">
+              No hay productos que coincidan con los filtros.
+            </td>
+          </tr>
+        }
+
+        @for (product of paginatedProducts(); track product.id) {
+          <tr class="transition hover:bg-gray-50">
+
+            <td class="whitespace-nowrap px-6 py-4">
+              <div class="flex items-center gap-3">
+                <img
+                  [src]="product.imageUrl ?? '/tomatoes/tomate-default.svg'"
+                  [alt]="product.name"
+                  class="h-12 w-12 rounded-xl object-cover"
+                  loading="lazy"
+                />
+                <span class="text-sm font-semibold text-gray-800">
+                  {{ product.name }}
+                </span>
+              </div>
+            </td>
+
+            <td class="whitespace-nowrap px-6 py-4 text-right">
+              <span class="text-sm font-medium text-gray-800">
+                {{ product.quantity }} kg
+              </span>
+            </td>
+
+            <td class="whitespace-nowrap px-6 py-4 text-right">
+              <span class="text-sm font-semibold text-gray-800">
+                {{ formatValue(product.value) }}
+              </span>
+            </td>
+
+            <td class="whitespace-nowrap px-6 py-4">
+              <span
+                class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+                [class.bg-green-100]="product.status === 'ACTIVE'"
+                [class.text-green-700]="product.status === 'ACTIVE'"
+                [class.bg-gray-100]="product.status === 'INACTIVE'"
+                [class.text-gray-600]="product.status === 'INACTIVE'"
+              >
+                {{ product.status === 'ACTIVE' ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+
+            <td class="whitespace-nowrap px-6 py-4 text-right">
+              <div class="flex justify-end gap-2">
+
+                <button
+                  type="button"
+                  (click)="onEdit(product)"
+                  aria-label="Editar producto"
+                  title="Editar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 text-gray-700 transition hover:bg-gray-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 2.651 2.651M8 16l8.862-8.862a1.875 1.875 0 0 1 2.652 2.652L10.652 18.65 6 20l1.348-4.652Z" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="onDelete(product)"
+                  aria-label="Eliminar producto"
+                  title="Eliminar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-14.25 0 .75 13.5h10.5l.75-13.5M9 6.75V4.5h6v2.25m-5.25 3.75v6m3.75-6v6" />
+                  </svg>
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+        }
+      </tbody>
+    </table>
+  </app-table>
+</div>

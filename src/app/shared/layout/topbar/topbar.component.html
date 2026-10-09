@@ -1,0 +1,37 @@
+<header
+  class="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6"
+>
+  <!-- Título -->
+  <div>
+    <h2 class="text-lg font-semibold text-gray-900">
+      Gestión de Invernaderos
+    </h2>
+
+    <p class="text-xs text-gray-500">
+      Administración y control de producción
+    </p>
+  </div>
+
+  <!-- Usuario -->
+  @if (currentUser(); as user) {
+    <div class="flex items-center gap-3">
+
+      <div class="hidden text-right sm:block">
+        <p class="text-sm font-semibold text-gray-900">
+          {{ user.name }}
+        </p>
+
+        <p class="text-xs text-gray-500">
+          {{ user.role }}
+        </p>
+      </div>
+
+      <div
+        class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-700"
+      >
+        {{ user.name.charAt(0).toUpperCase() }}
+      </div>
+
+    </div>
+  }
+</header>

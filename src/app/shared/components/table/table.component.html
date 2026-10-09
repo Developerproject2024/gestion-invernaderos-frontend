@@ -1,0 +1,113 @@
+<section
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+>
+
+  <!-- Encabezado -->
+  <div
+    class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+  >
+
+    <div>
+      @if (title()) {
+        <h2 class="text-base font-semibold text-gray-900">
+          {{ title() }}
+        </h2>
+      }
+
+      @if (description()) {
+        <p class="mt-1 text-sm text-gray-500">
+          {{ description() }}
+        </p>
+      }
+    </div>
+
+    <div
+      class="shrink-0 text-sm text-gray-500"
+    >
+      {{ totalItems() }}
+      {{ totalItems() === 1 ? 'registro' : 'registros' }}
+    </div>
+
+  </div>
+
+
+  <!-- Contenido -->
+  @if (hasData()) {
+
+    <div class="overflow-x-auto">
+      <ng-content />
+    </div>
+
+  } @else {
+
+    <div
+      class="flex min-h-40 items-center justify-center px-5 py-8"
+    >
+      <div class="text-center">
+
+        <div class="text-3xl">
+          📋
+        </div>
+
+        <p
+          class="mt-2 text-sm font-medium text-gray-600"
+        >
+          {{ emptyMessage() }}
+        </p>
+
+      </div>
+    </div>
+
+  }
+
+
+  <!-- Paginación -->
+  @if (
+    showPagination() &&
+    hasData() &&
+    totalPages() > 1
+  ) {
+
+    <div
+      class="flex flex-col gap-3 border-t border-gray-200 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+
+      <p class="text-xs text-gray-500">
+        Página
+        <span class="font-semibold text-gray-700">
+          {{ currentPage() }}
+        </span>
+        de
+        <span class="font-semibold text-gray-700">
+          {{ totalPages() }}
+        </span>
+      </p>
+
+
+      <div class="flex items-center gap-2">
+
+        <button
+          type="button"
+          [disabled]="currentPage() <= 1"
+          (click)="onPreviousPage()"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Anterior
+        </button>
+
+        <button
+          type="button"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="onNextPage()"
+          class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Siguiente
+        </button>
+
+      </div>
+
+    </div>
+
+  }
+
+</section>

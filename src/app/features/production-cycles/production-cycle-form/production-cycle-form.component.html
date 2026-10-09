@@ -1,0 +1,110 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+  <div>
+    <label for="cycle-greenhouse" class="mb-1.5 block text-sm font-semibold text-gray-700">
+      Invernadero
+    </label>
+    <select
+      id="cycle-greenhouse"
+      formControlName="greenhouseId"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="">Selecciona un invernadero</option>
+      @for (greenhouse of greenhouses(); track greenhouse.id) {
+        <option [value]="greenhouse.id">{{ greenhouse.name }}</option>
+      }
+    </select>
+    @if (form.controls.greenhouseId.invalid && form.controls.greenhouseId.touched) {
+      <p class="mt-1 text-xs text-red-600">Selecciona un invernadero.</p>
+    }
+  </div>
+
+  <div>
+    <label for="cycle-name" class="mb-1.5 block text-sm font-semibold text-gray-700">
+      Nombre del ciclo
+    </label>
+    <input
+      id="cycle-name"
+      type="text"
+      formControlName="name"
+      placeholder="Ej. Ciclo 1 - 2026"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+    @if (form.controls.name.invalid && form.controls.name.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        El nombre es obligatorio y debe tener al menos 3 caracteres.
+      </p>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cycle-start" class="mb-1.5 block text-sm font-semibold text-gray-700">
+        Fecha de inicio
+      </label>
+      <input
+        id="cycle-start"
+        type="date"
+        formControlName="startDate"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+      />
+      @if (form.controls.startDate.invalid && form.controls.startDate.touched) {
+        <p class="mt-1 text-xs text-red-600">Indica la fecha de inicio.</p>
+      }
+    </div>
+    <div>
+      <label for="cycle-end" class="mb-1.5 block text-sm font-semibold text-gray-700">
+        Fecha de finalización
+      </label>
+      <input
+        id="cycle-end"
+        type="date"
+        formControlName="endDate"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+      />
+      @if (form.controls.endDate.invalid && form.controls.endDate.touched) {
+        <p class="mt-1 text-xs text-red-600">Indica la fecha de finalización.</p>
+      }
+    </div>
+  </div>
+  @if (form.hasError('invalidDateRange') && form.controls.endDate.touched) {
+    <p class="-mt-3 text-xs text-red-600">
+      La fecha de finalización debe ser igual o posterior a la de inicio.
+    </p>
+  }
+
+  @if (saveError()) {
+    <p role="alert" class="text-sm text-red-600">{{ saveError() }}</p>
+  }
+
+  <div>
+    <label for="cycle-status" class="mb-1.5 block text-sm font-semibold text-gray-700">
+      Estado
+    </label>
+    <select
+      id="cycle-status"
+      formControlName="status"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="PLANNED">Planeado</option>
+      <option value="ACTIVE">Activo</option>
+      <option value="COMPLETED">Finalizado</option>
+    </select>
+  </div>
+
+  <div class="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid || isSaving()"
+      class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {{ isSaving() ? 'Guardando...' : isEditMode ? 'Actualizar ciclo' : 'Crear ciclo' }}
+    </button>
+  </div>
+</form>

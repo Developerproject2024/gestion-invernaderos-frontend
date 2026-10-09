@@ -1,0 +1,124 @@
+<form
+  [formGroup]="greenhouseForm"
+  (ngSubmit)="onSubmit()"
+>
+  <!-- Nombre -->
+  <div>
+    <label
+      for="name"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Nombre del invernadero
+    </label>
+
+    <input
+      id="name"
+      type="text"
+      formControlName="name"
+      placeholder="Ej. Invernadero Norte"
+      [readonly]="isEditMode"
+      class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100 read-only:bg-gray-100 read-only:text-gray-500"
+      [class.border-red-500]="
+        greenhouseForm.controls.name.invalid &&
+        greenhouseForm.controls.name.touched
+      "
+    />
+
+    @if (isEditMode) {
+      <p class="mt-1 text-xs text-gray-500">
+        El nombre no puede modificarse al actualizar.
+      </p>
+    }
+
+    @if (
+      !isEditMode &&
+      greenhouseForm.controls.name.invalid &&
+      greenhouseForm.controls.name.touched
+    ) {
+      <p class="mt-1 text-sm text-red-600">
+        @if (greenhouseForm.controls.name.hasError('required')) {
+          El nombre del invernadero es obligatorio.
+        } @else if (greenhouseForm.controls.name.hasError('minlength')) {
+          El nombre debe tener al menos 3 caracteres.
+        }
+      </p>
+    }
+  </div>
+
+  <!-- Estado -->
+  <div class="mt-5">
+    <label
+      for="status"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Estado
+    </label>
+
+    <select
+      id="status"
+      formControlName="status"
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="ACTIVE">
+        Activo
+      </option>
+
+      <option value="INACTIVE">
+        Inactivo
+      </option>
+    </select>
+  </div>
+
+  <div class="mt-5">
+    <label
+      for="assignedUserIds"
+      class="mb-2 block text-sm font-semibold text-gray-700"
+    >
+      Usuarios asignados
+    </label>
+
+    <select
+      id="assignedUserIds"
+      formControlName="assignedUserIds"
+      multiple
+      size="4"
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      @for (user of assignableUsers; track user.id) {
+        <option [value]="user.id">
+          {{ user.name }} ({{ user.email }})
+        </option>
+      }
+    </select>
+
+    <p class="mt-1 text-xs text-gray-500">
+      Puedes asignar varios usuarios. Mantén Ctrl (Windows/Linux) o Cmd (Mac)
+      para seleccionar más de uno.
+    </p>
+  </div>
+
+  <!-- Acciones -->
+  <div
+    class="mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end"
+  >
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="submit"
+      [disabled]="greenhouseForm.invalid || isSaving()"
+      class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      @if (isSaving()) {
+        Guardando...
+      } @else {
+        {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+      }
+    </button>
+  </div>
+</form>

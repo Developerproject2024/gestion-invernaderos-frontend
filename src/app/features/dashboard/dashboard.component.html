@@ -1,0 +1,817 @@
+<div class="space-y-6">
+
+  <!-- Encabezado -->
+  <div
+    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-gray-900">
+        Dashboard
+      </h1>
+
+      <p class="mt-1 text-sm text-gray-500">
+        Resumen general de la gestión de invernaderos
+      </p>
+    </div>
+  </div>
+
+
+  <!-- Filtros -->
+  <section
+    class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+  >
+    <div class="mb-5">
+      <h2 class="text-base font-semibold text-gray-900">
+        Filtros
+      </h2>
+
+      <p class="mt-1 text-sm text-gray-500">
+        Filtra la información por invernadero, ciclo y periodo.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+      <!-- Invernadero -->
+      <div>
+        <label
+          for="dashboard-greenhouse"
+          class="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
+          Invernadero
+        </label>
+
+        <select
+          id="dashboard-greenhouse"
+          [ngModel]="selectedGreenhouse() ?? ''"
+          (ngModelChange)="onGreenhouseChange($event)"
+          class="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-50"
+        >
+          <option value="">
+            Todos los invernaderos
+          </option>
+
+          @for (
+            greenhouse of greenhouses();
+            track greenhouse.id
+          ) {
+            <option [value]="greenhouse.id">
+              {{ greenhouse.name }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Ciclo de producción -->
+      <div>
+        <label
+          for="dashboard-production-cycle"
+          class="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
+          Ciclo de producción
+        </label>
+
+        <select
+          id="dashboard-production-cycle"
+          [ngModel]="selectedProductionCycle() ?? ''"
+          (ngModelChange)="onProductionCycleChange($event)"
+          class="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-50"
+        >
+          <option value="">Todos los ciclos</option>
+
+          @for (cycle of availableCycles(); track cycle.id) {
+            <option [value]="cycle.id">
+              {{ cycle.name }} — {{ cycle.startDate }} / {{ cycle.endDate }}
+            </option>
+          }
+        </select>
+      </div>
+
+
+      <!-- Fecha inicial -->
+      <div>
+        <label
+          for="dashboard-start-date"
+          class="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
+          Fecha inicial
+        </label>
+
+        <input
+          id="dashboard-start-date"
+          type="date"
+          [ngModel]="startDate() ?? ''"
+          (ngModelChange)="onStartDateChange($event)"
+          class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-50"
+        />
+      </div>
+
+
+      <!-- Fecha final -->
+      <div>
+        <label
+          for="dashboard-end-date"
+          class="mb-1.5 block text-sm font-semibold text-gray-700"
+        >
+          Fecha final
+        </label>
+
+        <input
+          id="dashboard-end-date"
+          type="date"
+          [ngModel]="endDate() ?? ''"
+          (ngModelChange)="onEndDateChange($event)"
+          class="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm text-gray-800 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-50"
+        />
+      </div>
+
+    </div>
+
+
+    <div class="mt-4 flex justify-end">
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+  </section>
+
+
+  <!-- Resumen de producción y pagos -->
+  <section class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Detalle de producción</h2>
+          <p class="mt-1 text-sm text-gray-500">Producción registrada para los filtros seleccionados.</p>
+        </div>
+        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-xl text-green-700" aria-hidden="true">🌱</span>
+      </div>
+
+      <dl class="mt-5 divide-y divide-gray-100">
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Cantidad producida</dt>
+          <dd class="text-sm font-semibold text-gray-900">{{ formatQuantity(kpis().totalProductionQuantity) }} kg</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Valor de producción</dt>
+          <dd class="text-sm font-semibold text-gray-900">{{ formatCurrency(kpis().totalProductionValue) }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Gastos registrados</dt>
+          <dd class="text-sm font-semibold text-red-700">{{ formatCurrency(kpis().totalExpenses) }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm font-semibold text-gray-800">Valor neto</dt>
+          <dd class="flex items-center gap-2 text-sm font-bold text-gray-900">
+            {{ formatCurrency(kpis().totalNetValue) }}
+            @let netValueStatus = getNetValueTrafficLight(kpis().totalNetValue);
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold"
+              [class.bg-green-100]="netValueStatus === 'high'"
+              [class.text-green-800]="netValueStatus === 'high'"
+              [class.bg-amber-100]="netValueStatus === 'medium'"
+              [class.text-amber-800]="netValueStatus === 'medium'"
+              [class.bg-red-100]="netValueStatus === 'low'"
+              [class.text-red-800]="netValueStatus === 'low'"
+              [title]="netValueStatus === 'high' ? 'Alto: $500.000 o más' : netValueStatus === 'medium' ? 'Medio: entre $0 y menos de $500.000' : 'Bajo: valor neto negativo'"
+            >
+              <span class="h-2 w-2 rounded-full" [class.bg-green-600]="netValueStatus === 'high'" [class.bg-amber-500]="netValueStatus === 'medium'" [class.bg-red-600]="netValueStatus === 'low'"></span>
+              {{ getKpiTrafficLightLabel(netValueStatus) }}
+            </span>
+          </dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Detalle de pagos</h2>
+          <p class="mt-1 text-sm text-gray-500">Estado de los pagos asociados a la producción.</p>
+        </div>
+        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl text-red-700" aria-hidden="true">💰</span>
+      </div>
+
+      <dl class="mt-5 divide-y divide-gray-100">
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Producción pagada</dt>
+          <dd class="text-sm font-semibold text-green-700">{{ formatCurrency(kpis().totalPaidProduction) }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Abonos recibidos</dt>
+          <dd class="text-sm font-semibold text-amber-700">{{ formatCurrency(kpis().totalPartialPayments) }}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <dt class="text-sm text-gray-600">Saldo pendiente</dt>
+          <dd class="text-sm font-semibold text-red-700">{{ formatCurrency(kpis().totalPendingBalance) }}</dd>
+        </div>
+      </dl>
+    </article>
+  </section>
+
+  <!-- Gráficos -->
+  <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+    <!-- Producción por invernadero -->
+    <article
+      class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+    >
+
+      <div class="mb-5">
+        <div class="flex items-start justify-between gap-4">
+
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Producción por invernadero
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-500">
+              Kilos producidos por cada invernadero.
+            </p>
+          </div>
+
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-600"
+          >
+            🌱
+          </div>
+
+        </div>
+      </div>
+
+
+      @if (productionByGreenhouse().length > 0) {
+
+        <div class="h-80">
+          <canvas
+            baseChart
+            [data]="productionChartData()"
+            [options]="productionChartOptions"
+            [type]="'bar'"
+          ></canvas>
+        </div>
+
+      } @else {
+
+        <div
+          class="flex min-h-80 items-center justify-center rounded-xl bg-gray-50"
+        >
+          <div class="text-center">
+            <div class="text-3xl">🌱</div>
+
+            <p class="mt-2 text-sm font-medium text-gray-600">
+              No hay producción
+            </p>
+
+            <p class="mt-1 text-xs text-gray-400">
+              No existe producción para los filtros seleccionados.
+            </p>
+          </div>
+        </div>
+
+      }
+
+    </article>
+
+
+    <!-- Valor producción por producto -->
+    <article
+      class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+    >
+
+      <div class="mb-5">
+        <div class="flex items-start justify-between gap-4">
+
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Valor de producción por producto
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-500">
+              Valor económico de la producción registrada.
+            </p>
+          </div>
+
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700"
+          >
+            📈
+          </div>
+
+        </div>
+      </div>
+
+
+      @if (productionByProduct().length > 0) {
+
+        <div class="h-80">
+          <canvas
+            baseChart
+            [data]="productionValueChartData()"
+            [options]="productionValueChartOptions"
+            [type]="'bar'"
+          ></canvas>
+        </div>
+
+      } @else {
+
+        <div
+          class="flex min-h-80 items-center justify-center rounded-xl bg-gray-50"
+        >
+          <div class="text-center">
+            <div class="text-3xl">📈</div>
+
+            <p class="mt-2 text-sm font-medium text-gray-600">
+              No hay producción
+            </p>
+
+            <p class="mt-1 text-xs text-gray-400">
+              No existe producción para los filtros seleccionados.
+            </p>
+          </div>
+        </div>
+
+      }
+
+    </article>
+
+
+    <!-- Gastos -->
+    <article
+      class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2"
+    >
+
+      <div class="mb-5">
+        <div class="flex items-start justify-between gap-4">
+
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">
+              Gastos
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-500">
+              Distribución de los gastos registrados.
+            </p>
+          </div>
+
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"
+          >
+            💰
+          </div>
+
+        </div>
+      </div>
+
+
+      @if (expensesChart().length > 0) {
+
+        <div class="h-80">
+          <canvas
+            baseChart
+            [data]="expensesChartData()"
+            [options]="expensesChartOptions"
+            [type]="'bar'"
+          ></canvas>
+        </div>
+
+      } @else {
+
+        <div
+          class="flex min-h-80 items-center justify-center rounded-xl bg-gray-50"
+        >
+          <div class="text-center">
+            <div class="text-3xl">📊</div>
+
+            <p class="mt-2 text-sm font-medium text-gray-600">
+              No hay gastos
+            </p>
+
+            <p class="mt-1 text-xs text-gray-400">
+              No existen gastos para los filtros seleccionados.
+            </p>
+          </div>
+        </div>
+
+      }
+
+    </article>
+
+  </section>
+
+
+  <!-- Tablas -->
+  <section class="space-y-6">
+
+    <!-- Producción por invernadero -->
+    <app-table
+      title="Producción por invernadero"
+      description="Kilos y valor de producción registrados por invernadero."
+      [totalItems]="productionByGreenhouse().length"
+      [currentPage]="1"
+      [totalPages]="1"
+      [hasData]="productionByGreenhouse().length > 0"
+      [showPagination]="false"
+      emptyMessage="No hay producción para los filtros seleccionados."
+    >
+
+      <table class="min-w-full text-left text-sm">
+
+        <thead class="bg-gray-50">
+          <tr>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Invernadero
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Kilos
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor producción
+            </th>
+
+          </tr>
+        </thead>
+
+
+        <tbody class="divide-y divide-gray-100">
+
+          @for (
+            item of productionByGreenhouse();
+            track item.greenhouseId
+          ) {
+
+            <tr class="transition hover:bg-gray-50">
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 font-semibold text-gray-800"
+              >
+                {{ item.label }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-medium text-gray-700"
+              >
+                {{ formatQuantity(item.quantity) }} kg
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-bold text-gray-900"
+              >
+                {{ formatCurrency(item.value) }}
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </app-table>
+
+
+    <!-- Producción por producto -->
+    <app-table
+      title="Producción por producto"
+      description="Kilos, valor por kilo y valor total producido por producto."
+      [totalItems]="productionByProduct().length"
+      [currentPage]="1"
+      [totalPages]="1"
+      [hasData]="productionByProduct().length > 0"
+      [showPagination]="false"
+      emptyMessage="No hay producción para los filtros seleccionados."
+    >
+
+      <table class="min-w-full text-left text-sm">
+
+        <thead class="bg-gray-50">
+          <tr>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Producto
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Kilos
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor/kg
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor producción
+            </th>
+
+          </tr>
+        </thead>
+
+
+        <tbody class="divide-y divide-gray-100">
+
+          @for (
+            item of productionByProduct();
+            track item.productId
+          ) {
+
+            <tr class="transition hover:bg-gray-50">
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 font-semibold text-gray-800"
+              >
+                {{ item.label }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-medium text-gray-700"
+              >
+                {{ formatQuantity(item.quantity) }} kg
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right text-gray-700"
+              >
+                {{ formatCurrency(item.unitValue) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-bold text-gray-900"
+              >
+                {{ formatCurrency(item.value) }}
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </app-table>
+
+
+    <!-- Gastos registrados -->
+    <app-table
+      title="Gastos registrados"
+      description="Detalle de los gastos registrados según los filtros seleccionados."
+      [totalItems]="filteredExpenses().length"
+      [currentPage]="expensesPage()"
+      [totalPages]="expensesTotalPages()"
+      [hasData]="filteredExpenses().length > 0"
+      emptyMessage="No hay gastos para los filtros seleccionados."
+      (previousPage)="previousExpensesPage()"
+      (nextPage)="nextExpensesPage()"
+    >
+
+      <table class="min-w-full text-left text-sm">
+
+        <thead class="bg-gray-50">
+          <tr>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Fecha
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Invernadero
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Ciclo
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Categoría
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Cantidad
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor
+            </th>
+
+          </tr>
+        </thead>
+
+
+        <tbody class="divide-y divide-gray-100">
+
+          @for (
+            expense of paginatedExpenses();
+            track expense.id
+          ) {
+
+            <tr class="transition hover:bg-gray-50">
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ formatDate(expense.date) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 font-medium text-gray-800"
+              >
+                {{ getGreenhouseName(expense.greenhouseId) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ getProductionCycleName(expense.productionCycleId) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ expense.expenseCategoryId }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right text-gray-700"
+              >
+                {{ expense.quantity }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-semibold text-gray-900"
+              >
+                {{ formatCurrency(expense.value) }}
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </app-table>
+
+
+    <!-- Producción registrada -->
+    <app-table
+      title="Producción registrada"
+      description="Detalle de las producciones registradas según los filtros seleccionados."
+      [totalItems]="filteredMovements().length"
+      [currentPage]="movementsPage()"
+      [totalPages]="movementsTotalPages()"
+      [hasData]="filteredMovements().length > 0"
+      emptyMessage="No hay producción para los filtros seleccionados."
+      (previousPage)="previousMovementsPage()"
+      (nextPage)="nextMovementsPage()"
+    >
+
+      <table class="min-w-full text-left text-sm">
+
+        <thead class="bg-gray-50">
+          <tr>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Fecha
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Invernadero
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Ciclo
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Producto
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Kilos
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor/kg
+            </th>
+
+            <th
+              class="whitespace-nowrap px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Valor producción
+            </th>
+
+          </tr>
+        </thead>
+
+
+        <tbody class="divide-y divide-gray-100">
+
+          @for (
+            movement of paginatedMovements();
+            track movement.id
+          ) {
+
+            <tr class="transition hover:bg-gray-50">
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ formatDate(movement.date) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 font-medium text-gray-800"
+              >
+                {{ getGreenhouseName(movement.greenhouseId) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ getProductionCycleName(movement.productionCycleId) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-gray-700"
+              >
+                {{ getProductName(movement.productId) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-semibold text-gray-800"
+              >
+                {{ formatQuantity(movement.quantity) }} kg
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right text-gray-700"
+              >
+                {{ formatCurrency(movement.unitValue) }}
+              </td>
+
+              <td
+                class="whitespace-nowrap px-5 py-3.5 text-right font-bold text-gray-900"
+              >
+                {{ formatCurrency(movement.totalValue) }}
+              </td>
+
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </app-table>
+
+  </section>
+
+</div>

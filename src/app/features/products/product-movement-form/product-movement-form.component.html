@@ -1,0 +1,225 @@
+<form
+  [formGroup]="form"
+  (ngSubmit)="onSubmit()"
+  class="space-y-5"
+>
+  <div>
+    <label
+      for="movement-date"
+      class="mb-1.5 block text-sm font-medium text-gray-700"
+    >
+      Fecha de producción
+    </label>
+
+    <input
+      id="movement-date"
+      type="date"
+      formControlName="date"
+      class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    />
+
+    @if (form.controls.date.invalid && form.controls.date.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        La fecha es obligatoria.
+      </p>
+    }
+  </div>
+
+  <div>
+    <label
+      for="movement-product"
+      class="mb-1.5 block text-sm font-medium text-gray-700"
+    >
+      Producto
+    </label>
+
+    <select
+      id="movement-product"
+      formControlName="productId"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="">Seleccione un producto</option>
+
+      @for (product of products(); track product.id) {
+        @if (product.status === 'ACTIVE') {
+          <option [value]="product.id">
+            {{ product.name }}
+          </option>
+        }
+      }
+    </select>
+
+    @if (form.controls.productId.invalid && form.controls.productId.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        Seleccione un producto.
+      </p>
+    }
+  </div>
+
+  @if (selectedProduct(); as product) {
+    <div class="rounded-xl border border-red-100 bg-red-50 p-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-red-600">
+            Valor por kilo
+          </p>
+          <p class="mt-1 text-lg font-bold text-gray-900">
+            {{ formatCurrency(product.value) }}
+          </p>
+        </div>
+        <div class="text-3xl">🍅</div>
+      </div>
+      <p class="mt-2 text-xs text-gray-500">
+        El valor por kilo se obtiene automáticamente del producto seleccionado.
+      </p>
+    </div>
+  }
+
+  <div>
+    <label
+      for="movement-greenhouse"
+      class="mb-1.5 block text-sm font-medium text-gray-700"
+    >
+      Invernadero
+    </label>
+
+    <select
+      id="movement-greenhouse"
+      formControlName="greenhouseId"
+      (change)="onGreenhouseChange()"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+    >
+      <option value="">Seleccione un invernadero</option>
+
+      @for (greenhouse of greenhouses(); track greenhouse.id) {
+        @if (greenhouse.status === 'ACTIVE') {
+          <option [value]="greenhouse.id">
+            {{ greenhouse.name }}
+          </option>
+        }
+      }
+    </select>
+
+    @if (form.controls.greenhouseId.invalid && form.controls.greenhouseId.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        Seleccione un invernadero.
+      </p>
+    }
+  </div>
+
+  <div>
+    <label
+      for="movement-cycle"
+      class="mb-1.5 block text-sm font-medium text-gray-700"
+    >
+      Ciclo de producción
+    </label>
+
+    <select
+      id="movement-cycle"
+      formControlName="productionCycleId"
+      [disabled]="availableCycles().length === 0"
+      class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 disabled:bg-gray-100"
+    >
+      <option value="">
+        {{ availableCycles().length ? 'Seleccione un ciclo' : 'No hay ciclos para este invernadero' }}
+      </option>
+
+      @for (cycle of availableCycles(); track cycle.id) {
+        <option [value]="cycle.id">
+          {{ cycle.name }} ({{ cycle.startDate }} — {{ cycle.endDate }})
+        </option>
+      }
+    </select>
+
+    @if (form.controls.productionCycleId.invalid && form.controls.productionCycleId.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        Seleccione el ciclo de producción.
+      </p>
+    }
+  </div>
+
+  <div>
+    <label
+      for="movement-quantity"
+      class="mb-1.5 block text-sm font-medium text-gray-700"
+    >
+      Kilos producidos
+    </label>
+
+    <div class="relative">
+      <input
+        id="movement-quantity"
+        type="number"
+        min="0.01"
+        step="0.01"
+        formControlName="quantity"
+        placeholder="Ej. 25.50"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-12 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-100"
+      />
+      <span
+        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500"
+      >
+        kg
+      </span>
+    </div>
+
+    @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+      <p class="mt-1 text-xs text-red-600">
+        Los kilos deben ser mayores que 0.
+      </p>
+    }
+  </div>
+
+  @if (selectedProduct()) {
+    <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <p class="text-xs font-medium uppercase tracking-wide text-gray-500">
+        Resumen de producción
+      </p>
+
+      <div class="mt-3 space-y-2">
+        <div class="flex justify-between gap-4 text-sm">
+          <span class="text-gray-500">Kilos producidos</span>
+          <span class="font-semibold text-gray-800">
+            {{ form.controls.quantity.value }} kg
+          </span>
+        </div>
+
+        <div class="flex justify-between gap-4 text-sm">
+          <span class="text-gray-500">Valor por kilo</span>
+          <span class="font-semibold text-gray-800">
+            {{ formatCurrency(unitValue()) }}
+          </span>
+        </div>
+
+        <div class="border-t border-gray-200 pt-2">
+          <div class="flex justify-between gap-4">
+            <span class="font-semibold text-gray-700">Valor total</span>
+            <span class="text-lg font-bold text-red-600">
+              {{ formatCurrency(totalValue()) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div
+    class="flex flex-col-reverse gap-2 border-t border-gray-200 pt-4 sm:flex-row sm:justify-end"
+  >
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="submit"
+      class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {{ isEditMode() ? 'Actualizar producción' : 'Registrar producción' }}
+    </button>
+  </div>
+</form>

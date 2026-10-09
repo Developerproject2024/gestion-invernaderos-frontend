@@ -1,0 +1,178 @@
+<aside
+  class="flex h-full w-64 flex-col border-r border-gray-200 bg-white"
+>
+  <!-- Logo / encabezado -->
+  <div
+    class="flex h-16 items-center border-b border-gray-200 px-5"
+  >
+    <a
+      routerLink="/dashboard"
+      class="flex items-center gap-3"
+    >
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-xl shadow-sm"
+      >
+        🍅
+      </div>
+
+      <div>
+        <h1 class="text-sm font-bold text-gray-900">
+          Gestión
+        </h1>
+
+        <p class="text-xs text-gray-500">
+          Invernaderos
+        </p>
+      </div>
+    </a>
+  </div>
+
+  <!-- Navegación -->
+  <nav class="flex-1 space-y-1 overflow-y-auto p-4">
+
+    <!-- Dashboard -->
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="bg-red-50 text-red-700"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+    >
+      <span class="text-lg">
+        📊
+      </span>
+
+      <span>
+        Dashboard
+      </span>
+    </a>
+
+    <!-- Invernaderos - solo ADMIN -->
+    @if (isAdmin()) {
+      <a
+        routerLink="/greenhouses"
+        routerLinkActive="bg-red-50 text-red-700"
+        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+      >
+        <span class="text-lg">
+          🏠
+        </span>
+
+        <span>
+          Invernaderos
+        </span>
+      </a>
+
+      <a
+        routerLink="/production-cycles"
+        routerLinkActive="bg-red-50 text-red-700"
+        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+      >
+        <span class="text-lg">🌱</span>
+        <span>Ciclos de producción</span>
+      </a>
+    }
+
+    <!-- Gastos -->
+    <a
+      routerLink="/expenses"
+      routerLinkActive="bg-red-50 text-red-700"
+      class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+    >
+      <span class="text-lg">
+        💰
+      </span>
+
+      <span>
+        Gastos
+      </span>
+    </a>
+
+    <!-- Productos -->
+    <a
+      routerLink="/products"
+      routerLinkActive="bg-red-50 text-red-700"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+    >
+      <span class="text-lg">
+        📦
+      </span>
+
+      <span>
+        Productos
+      </span>
+    </a>
+
+    <!-- Movimientos -->
+    <a
+      routerLink="/products/movements"
+      routerLinkActive="bg-red-50 text-red-700"
+      class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+    >
+      <span class="text-lg">
+        🚚
+      </span>
+
+      <span>
+        Movimientos
+      </span>
+    </a>
+
+    <a
+      routerLink="/portfolio"
+      routerLinkActive="bg-red-50 text-red-700"
+      class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+    >
+      <span class="text-lg">🧾</span>
+      <span>Cartera</span>
+    </a>
+
+  </nav>
+
+  <!-- Usuario -->
+  <div
+    class="border-t border-gray-200 p-4"
+  >
+    @if (currentUser(); as user) {
+      <div
+        class="mb-3 rounded-lg bg-gray-50 p-3"
+      >
+        <p
+          class="truncate text-sm font-semibold text-gray-900"
+        >
+          {{ user.name }}
+        </p>
+
+        <p
+          class="mt-0.5 truncate text-xs text-gray-500"
+        >
+          {{ user.email }}
+        </p>
+
+        <span
+          class="mt-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold"
+          [class.bg-red-100]="user.role === 'ADMIN'"
+          [class.text-red-700]="user.role === 'ADMIN'"
+          [class.bg-gray-200]="user.role === 'GENERAL'"
+          [class.text-gray-700]="user.role === 'GENERAL'"
+        >
+          {{ user.role }}
+        </span>
+      </div>
+    }
+
+    <button
+      type="button"
+      (click)="logout()"
+      class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-700"
+    >
+      <span class="text-lg">
+        🚪
+      </span>
+
+      <span>
+        Cerrar sesión
+      </span>
+    </button>
+  </div>
+</aside>

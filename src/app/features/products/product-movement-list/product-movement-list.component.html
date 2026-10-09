@@ -1,0 +1,368 @@
+<div class="space-y-6">
+  <!-- ENCABEZADO -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">
+        Producción
+      </h2>
+
+      <p class="mt-1 text-sm text-gray-500">
+        Registro de producción y cosecha por invernadero.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="onCreate()"
+      class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+    >
+      + Registrar producción
+    </button>
+  </div>
+
+  <!-- FORMULARIO -->
+  <app-modal
+    [open]="showForm()"
+    [title]="selectedMovement() ? 'Editar producción' : 'Registrar producción'"
+    size="md"
+    (closed)="onFormCancel()"
+  >
+    <app-product-movement-form
+      [products]="products()"
+      [greenhouses]="greenhouses()"
+      [productionCycles]="productionCycles()"
+      [movement]="selectedMovement()"
+      (saved)="onFormSaved()"
+      (cancelled)="onFormCancel()"
+    />
+  </app-modal>
+
+  <!-- CONFIRMAR ELIMINACIÓN -->
+  <app-modal
+    [open]="showDeleteModal()"
+    title="Eliminar producción"
+    size="sm"
+    (closed)="onDeleteCancel()"
+  >
+    <div class="space-y-5">
+
+      <div>
+        <div
+          class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-xl"
+        >
+          ⚠️
+        </div>
+
+        <h3 class="mt-4 text-lg font-semibold text-gray-900">
+          ¿Eliminar esta producción?
+        </h3>
+
+        <p class="mt-2 text-sm leading-6 text-gray-500">
+          Esta acción eliminará el registro de producción y no se podrá deshacer.
+        </p>
+      </div>
+
+      @if (movementToDelete(); as movement) {
+        <div class="rounded-lg bg-gray-50 p-4 text-sm">
+
+          <div class="flex justify-between gap-4">
+            <span class="text-gray-500">
+              Producto
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ getProductName(movement.productId) }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex justify-between gap-4">
+            <span class="text-gray-500">
+              Invernadero
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ getGreenhouseName(movement.greenhouseId) }}
+            </span>
+          </div>
+
+          <div class="mt-2 flex justify-between gap-4">
+            <span class="text-gray-500">
+              Kilos
+            </span>
+
+            <span class="font-semibold text-gray-800">
+              {{ movement.quantity }} kg
+            </span>
+          </div>
+
+          <div class="mt-2 flex justify-between gap-4">
+            <span class="text-gray-500">
+              Valor total
+            </span>
+
+            <span class="font-semibold text-red-600">
+              {{ formatCurrency(getTotalValue(movement)) }}
+            </span>
+          </div>
+
+        </div>
+      }
+
+      <div
+        class="flex flex-col-reverse gap-2 border-t border-gray-200 pt-4 sm:flex-row sm:justify-end"
+      >
+        <button
+          type="button"
+          (click)="onDeleteCancel()"
+          class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          (click)="onDeleteConfirm()"
+          class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+        >
+          Eliminar
+        </button>
+      </div>
+
+    </div>
+  </app-modal>
+
+  <!-- TABLA -->
+  <app-table
+    title="Producción registrada"
+    description="Listado de producción y cosecha registrada."
+    [totalItems]="filteredMovements().length"
+    [currentPage]="currentPage()"
+    [totalPages]="totalPages()"
+    [hasData]="movements().length > 0"
+    emptyMessage="No hay registros de producción."
+    (previousPage)="onPreviousPage()"
+    (nextPage)="onNextPage()"
+  >
+    <div class="grid grid-cols-1 gap-3 border-b border-gray-100 p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <select
+        aria-label="Filtrar producción por invernadero"
+        [ngModel]="greenhouseFilter()"
+        (ngModelChange)="onGreenhouseFilterChange($event)"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los invernaderos</option>
+        @for (greenhouse of greenhouses(); track greenhouse.id) {
+          <option [value]="greenhouse.id">{{ greenhouse.name }}</option>
+        }
+      </select>
+
+      <select
+        aria-label="Filtrar producción por ciclo"
+        [ngModel]="cycleFilter()"
+        (ngModelChange)="cycleFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los ciclos</option>
+        @for (cycle of availableCycles(); track cycle.id) {
+          <option [value]="cycle.id">{{ cycle.name }}</option>
+        }
+      </select>
+
+      <select
+        aria-label="Filtrar producción por producto"
+        [ngModel]="productFilter()"
+        (ngModelChange)="productFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los productos</option>
+        @for (product of products(); track product.id) {
+          <option [value]="product.id">{{ product.name }}</option>
+        }
+      </select>
+
+      <input
+        aria-label="Fecha inicial de producción"
+        type="date"
+        [ngModel]="startDateFilter()"
+        (ngModelChange)="startDateFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      />
+
+      <input
+        aria-label="Fecha final de producción"
+        type="date"
+        [ngModel]="endDateFilter()"
+        (ngModelChange)="endDateFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      />
+
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="justify-self-start rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:col-span-2 xl:col-span-5"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <thead class="bg-gray-50">
+        <tr>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Fecha
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Producto
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Invernadero
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Ciclo
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Kilos
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Valor/kg
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Valor total
+          </th>
+
+          <th
+            scope="col"
+            class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Acciones
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 bg-white">
+
+        @if (filteredMovements().length === 0) {
+          <tr>
+            <td colspan="8" class="px-5 py-8 text-center text-sm text-gray-500">
+              No hay registros de producción que coincidan con los filtros.
+            </td>
+          </tr>
+        }
+
+        @for (movement of paginatedMovements(); track movement.id) {
+
+          <tr class="transition hover:bg-gray-50">
+
+            <!-- FECHA -->
+            <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700">
+              {{ formatDate(movement.date) }}
+            </td>
+
+            <!-- PRODUCTO -->
+            <td class="whitespace-nowrap px-5 py-4">
+              <span class="text-sm font-semibold text-gray-800">
+                {{ getProductName(movement.productId) }}
+              </span>
+            </td>
+
+            <!-- INVERNADERO -->
+            <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700">
+              {{ getGreenhouseName(movement.greenhouseId) }}
+            </td>
+
+            <!-- CICLO -->
+            <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700">
+              {{ getProductionCycleName(movement.productionCycleId) }}
+            </td>
+
+            <!-- KILOS -->
+            <td class="whitespace-nowrap px-5 py-4 text-right">
+              <span class="text-sm font-semibold text-gray-800">
+                {{ movement.quantity }} kg
+              </span>
+            </td>
+
+            <!-- VALOR POR KILO -->
+            <td class="whitespace-nowrap px-5 py-4 text-right">
+              <span class="text-sm text-gray-700">
+                {{ formatCurrency(getUnitValue(movement)) }}
+              </span>
+            </td>
+
+            <!-- VALOR TOTAL -->
+            <td class="whitespace-nowrap px-5 py-4 text-right">
+              <span class="text-sm font-bold text-red-600">
+                {{ formatCurrency(getTotalValue(movement)) }}
+              </span>
+            </td>
+
+            <!-- ACCIONES -->
+            <td class="whitespace-nowrap px-5 py-4 text-right">
+              <div class="flex justify-end gap-2">
+
+                <button
+                  type="button"
+                  (click)="onEdit(movement)"
+                  aria-label="Editar producción"
+                  title="Editar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 text-gray-700 transition hover:bg-gray-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 2.651 2.651M8 16l8.862-8.862a1.875 1.875 0 0 1 2.652 2.652L10.652 18.65 6 20l1.348-4.652Z" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="onDelete(movement)"
+                  aria-label="Eliminar producción"
+                  title="Eliminar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-14.25 0 .75 13.5h10.5l.75-13.5M9 6.75V4.5h6v2.25m-5.25 3.75v6m3.75-6v6" />
+                  </svg>
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+        }
+
+      </tbody>
+
+    </table>
+  </app-table>
+</div>

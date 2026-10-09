@@ -1,0 +1,385 @@
+<div class="space-y-6">
+
+  <!-- Encabezado -->
+  <div
+    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">
+        Gastos
+      </h2>
+
+      <p class="mt-1 text-sm text-gray-500">
+        Administración de los gastos registrados.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="onCreate()"
+      class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+    >
+      + Nuevo gasto
+    </button>
+  </div>
+
+  <!-- Modal crear / editar -->
+  <app-modal
+    [open]="showForm()"
+    [title]="
+      selectedExpense()
+        ? 'Editar gasto'
+        : 'Nuevo gasto'
+    "
+    size="md"
+    (closed)="onFormCancel()"
+  >
+    <app-expense-form
+      [expense]="selectedExpense()"
+      [categories]="categories()"
+      [greenhouses]="greenhouses()"
+      [productionCycles]="productionCycles()"
+      (saved)="onFormSaved()"
+      (cancelled)="onFormCancel()"
+    />
+  </app-modal>
+
+  <!-- Tabla -->
+  <app-table
+    title="Gastos registrados"
+    description="Listado de gastos registrados en los invernaderos."
+    [totalItems]="filteredExpenses().length"
+    [currentPage]="currentPage()"
+    [totalPages]="totalPages()"
+    [hasData]="expenses().length > 0"
+    emptyMessage="No hay gastos registrados."
+    (previousPage)="onPreviousPage()"
+    (nextPage)="onNextPage()"
+  >
+
+    <div class="grid grid-cols-1 gap-3 border-b border-gray-100 p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <select
+        aria-label="Filtrar gastos por invernadero"
+        [ngModel]="greenhouseFilter()"
+        (ngModelChange)="onGreenhouseFilterChange($event)"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los invernaderos</option>
+        @for (greenhouse of greenhouses(); track greenhouse.id) {
+          <option [value]="greenhouse.id">{{ greenhouse.name }}</option>
+        }
+      </select>
+
+      <select
+        aria-label="Filtrar gastos por ciclo"
+        [ngModel]="cycleFilter()"
+        (ngModelChange)="cycleFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todos los ciclos</option>
+        @for (cycle of availableCycles(); track cycle.id) {
+          <option [value]="cycle.id">{{ cycle.name }}</option>
+        }
+      </select>
+
+      <select
+        aria-label="Filtrar gastos por categoría"
+        [ngModel]="categoryFilter()"
+        (ngModelChange)="categoryFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+      >
+        <option value="">Todas las categorías</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+
+      <input
+        aria-label="Fecha inicial de gastos"
+        type="date"
+        [ngModel]="startDateFilter()"
+        (ngModelChange)="startDateFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      />
+
+      <input
+        aria-label="Fecha final de gastos"
+        type="date"
+        [ngModel]="endDateFilter()"
+        (ngModelChange)="endDateFilter.set($event); onFilterChange()"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+      />
+
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="justify-self-start rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:col-span-2 xl:col-span-5"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200">
+
+      <thead class="bg-gray-50">
+        <tr>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Fecha
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Invernadero
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Ciclo
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Categoría
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Cantidad
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Valor
+          </th>
+
+          <th
+            scope="col"
+            class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500"
+          >
+            Acciones
+          </th>
+
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 bg-white">
+
+        @if (filteredExpenses().length === 0) {
+          <tr>
+            <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
+              No hay gastos que coincidan con los filtros.
+            </td>
+          </tr>
+        }
+
+        @for (
+          expense of paginatedExpenses();
+          track expense.id
+        ) {
+
+          <tr class="transition hover:bg-gray-50">
+
+            <!-- Fecha -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <span class="text-sm font-medium text-gray-800">
+                {{ formatDate(expense.date) }}
+              </span>
+            </td>
+
+            <!-- Invernadero -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <span class="text-sm text-gray-700">
+                {{ getGreenhouseName(expense.greenhouseId) }}
+              </span>
+            </td>
+
+            <!-- Categoría -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <span class="text-sm text-gray-700">
+                {{ getProductionCycleName(expense.productionCycleId) }}
+              </span>
+            </td>
+
+            <!-- Categoría -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <span class="text-sm text-gray-700">
+                {{ getCategoryName(expense.expenseCategoryId) }}
+              </span>
+            </td>
+
+            <!-- Cantidad -->
+            <td
+              class="whitespace-nowrap px-6 py-4 text-right"
+            >
+              <span class="text-sm font-medium text-gray-800">
+                {{ expense.quantity }}
+              </span>
+            </td>
+
+            <!-- Valor -->
+            <td
+              class="whitespace-nowrap px-6 py-4 text-right"
+            >
+              <span class="text-sm font-semibold text-gray-800">
+                {{ formatValue(expense.value) }}
+              </span>
+            </td>
+
+            <!-- Acciones -->
+            <td
+              class="whitespace-nowrap px-6 py-4 text-right"
+            >
+              <div class="flex justify-end gap-2">
+
+                <button
+                  type="button"
+                  (click)="onEdit(expense)"
+                  aria-label="Editar gasto"
+                  title="Editar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-700 transition hover:bg-gray-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 2.651 2.651M8 16l8.862-8.862a1.875 1.875 0 0 1 2.652 2.652L10.652 18.65 6 20l1.348-4.652Z" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="onDelete(expense)"
+                  aria-label="Eliminar gasto"
+                  title="Eliminar"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition hover:bg-red-50"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-14.25 0 .75 13.5h10.5l.75-13.5M9 6.75V4.5h6v2.25m-5.25 3.75v6m3.75-6v6" />
+                  </svg>
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+        }
+
+      </tbody>
+
+    </table>
+
+  </app-table>
+
+</div>
+
+<!-- Modal eliminar -->
+<app-modal
+  [open]="showDeleteModal()"
+  title="Eliminar gasto"
+  size="sm"
+  (closed)="onCancelDelete()"
+>
+
+  <div class="text-center">
+
+    <div
+      class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl"
+    >
+      ⚠️
+    </div>
+
+    <h3 class="mt-4 text-lg font-bold text-gray-800">
+      ¿Eliminar gasto?
+    </h3>
+
+    <p class="mt-2 text-sm text-gray-500">
+      Estás a punto de eliminar el gasto:
+    </p>
+
+    @if (expenseToDelete()) {
+
+      <div class="mt-4 rounded-lg bg-gray-50 p-4 text-left">
+
+        <div class="flex justify-between gap-4">
+          <span class="text-sm text-gray-500">
+            Fecha
+          </span>
+
+          <span class="text-sm font-semibold text-gray-800">
+            {{ expenseToDelete()?.date }}
+          </span>
+        </div>
+
+        <div class="mt-2 flex justify-between gap-4">
+          <span class="text-sm text-gray-500">
+            Categoría
+          </span>
+
+          <span class="text-sm font-semibold text-gray-800">
+            {{
+              getCategoryName(
+                expenseToDelete()?.expenseCategoryId ?? ''
+              )
+            }}
+          </span>
+        </div>
+
+        <div class="mt-2 flex justify-between gap-4">
+          <span class="text-sm text-gray-500">
+            Valor
+          </span>
+
+          <span class="text-sm font-semibold text-gray-800">
+            {{
+              formatValue(
+                expenseToDelete()?.value ?? 0
+              )
+            }}
+          </span>
+        </div>
+
+      </div>
+
+    }
+
+    <p class="mt-4 text-sm text-gray-500">
+      Esta acción no se puede deshacer.
+    </p>
+
+  </div>
+
+  <div
+    class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"
+  >
+
+    <button
+      type="button"
+      (click)="onCancelDelete()"
+      class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancelar
+    </button>
+
+    <button
+      type="button"
+      (click)="onConfirmDelete()"
+      class="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
+    >
+      Sí, eliminar
+    </button>
+
+  </div>
+
+</app-modal>
