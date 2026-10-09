@@ -1,4 +1,4 @@
-name: Build and deploy to Render
+name: Build and promote on Render
 
 on:
   pull_request:
@@ -7,18 +7,22 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -32,8 +36,54 @@ jobs:
       - name: Build Angular app
         run: npm run build
 
-      - name: Trigger Render deploy
-        if: github.event_name != 'pull_request'
+      - name: Ensure release commit belongs to main
+        if: github.event_name == 'release'
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+  deploy-qa:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: qa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Deploy commit to Render and wait until live
         env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK"
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: bash .github/scripts/deploy-render.sh
+
+  deploy-stg:
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: stg
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Deploy released commit to Render and wait until live
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: bash .github/scripts/deploy-render.sh
+
+  deploy-prod:
+    if: >-
+      github.event_name == 'release' &&
+      startsWith(github.event.release.tag_name, 'v') &&
+      !github.event.release.prerelease
+    needs: deploy-stg
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Promote released commit to Render and wait until live
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: bash .github/scripts/deploy-render.sh
