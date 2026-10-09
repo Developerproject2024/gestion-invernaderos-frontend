@@ -3,6 +3,7 @@ set -euo pipefail
 
 : "${RENDER_API_KEY:?Configure RENDER_API_KEY in the GitHub environment}"
 : "${RENDER_SERVICE_ID:?Configure RENDER_SERVICE_ID in the GitHub environment}"
+: "${DEPLOY_COMMIT_SHA:?Set the commit SHA to deploy}"
 
 api_url="https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys"
 deploy_response=$(curl --fail --silent --show-error \
@@ -10,7 +11,7 @@ deploy_response=$(curl --fail --silent --show-error \
   --url "$api_url" \
   --header "Authorization: Bearer ${RENDER_API_KEY}" \
   --header "Content-Type: application/json" \
-  --data "$(jq -n --arg commitId "$GITHUB_SHA" '{commitId: $commitId}')")
+  --data "$(jq -n --arg commitId "$DEPLOY_COMMIT_SHA" '{commitId: $commitId}')")
 deploy_id=$(jq --exit-status --raw-output '.id' <<< "$deploy_response")
 
 echo "Waiting for Render deploy ${deploy_id} to become live."
